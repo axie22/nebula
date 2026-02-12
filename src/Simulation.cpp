@@ -27,18 +27,18 @@ float Simulation::CalculateMouseDistance(Vector2 mouse, Node p1) {
     return std::sqrt(distSq);
 }
 
-void Simulation::CheckClickedNode() {
+void Simulation::CheckClickedNode(Vector2 worldMouse) {
     for (int i = 0; i < nodes.size(); ++i) {
-        if (CalculateMouseDistance(GetMousePosition(), nodes[i]) < NODE_RADIUS) {
+        if (CalculateMouseDistance(worldMouse, nodes[i]) < NODE_RADIUS) {
             draggedNodeId = i;
             break;
         }
     }
 }
 
-void Simulation::Update(float dt) {
+void Simulation::Update(float dt, Vector2 worldMouse) {
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        CheckClickedNode();
+        CheckClickedNode(worldMouse);
     }
 
     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
@@ -94,7 +94,7 @@ void Simulation::Update(float dt) {
     }
 
     if (draggedNodeId != -1) {
-        nodes[draggedNodeId].position = GetMousePosition();
+        nodes[draggedNodeId].position = worldMouse;
         nodes[draggedNodeId].force = { 0.0f, 0.0f };
         nodes[draggedNodeId].velocity = { 0.0f, 0.0f };
     }

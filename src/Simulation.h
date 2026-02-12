@@ -11,7 +11,7 @@ class Simulation {
         int draggedNodeId = -1;
 
         void Init();
-        void Update(float dt);
+        void Update(float dt, Vector2 worldMouse);
 
     private:
         Vector2 center = { 400.0f, 300.0f };
@@ -22,7 +22,7 @@ class Simulation {
         const int NUMBER_OF_NODES = 30;
         const int NODE_RADIUS = 8.0;
 
-        void CheckClickedNode();
+        void CheckClickedNode(Vector2 worldMouse);
 };
 
 #endif
