@@ -53,6 +53,17 @@ public:
             }
         }
 
+        Vector2 center = { 400.0f, 300.0f };
+
+        for (auto& node : nodes) {
+            float dirX = center.x - node.position.x;
+            float dirY = center.y - node.position.y;
+
+            node.force.x += dirX * 0.5f;
+            node.force.y += dirY * 0.5f;
+        }
+
+
         for (auto& node : nodes) {
             node.velocity.x += node.force.x * dt;
             node.velocity.y += node.force.y * dt;

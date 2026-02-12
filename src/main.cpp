@@ -5,7 +5,7 @@
 int main(void) {
     const int screenWidth = 800;
     const int screenHeight = 600;
-    const int radius = 10.0f;
+    const int radius = 8.0f;
 
     InitWindow(screenWidth, screenHeight, "Nebula");
     SetTargetFPS(60);
