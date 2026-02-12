@@ -3,12 +3,18 @@
 void Simulation::Init() {
     // Initialize in random positions
     nodes.reserve(NUMBER_OF_NODES);
+    edges.reserve(NUMBER_OF_NODES + 1);
 
     for (int i = 0; i < NUMBER_OF_NODES; ++i) {
-        float x = (float)GetRandomValue((int)MIN_POS, (int)MAX_POS);
-        float y = (float)GetRandomValue((int)MIN_POS, (int)MAX_POS);
+        float x = center.x + (float)GetRandomValue((int)SPAWN_LOWER, (int)SPAWN_UPPER);
+        float y = center.y + (float)GetRandomValue((int)SPAWN_LOWER, (int)SPAWN_UPPER);
         nodes.emplace_back(i, x, y);
     }
+
+    for (int i = 0; i < nodes.size() - 1; ++i) {
+        edges.emplace_back(i, i + 1);
+    }
+    edges.emplace_back((int)nodes.size() - 1, 0);
 }
 
 float Simulation::CalculateNodeDistance(Node p1, Node p2) {
@@ -58,7 +64,7 @@ void Simulation::Update(float dt, Vector2 worldMouse) {
             if (distance < 1.0f) distance = 1.0f;
 
             // Calculate Force Magnitude (Coulomb's Law: F = k / r)
-            float forceMagnitude = 2000.0f / distance;
+            float forceMagnitude = REPULSION_FORCE / distance;
 
             // Create the Force Vector (Direction * Magnitude)
             float fx = (dx / distance) * forceMagnitude;
@@ -92,6 +98,28 @@ void Simulation::Update(float dt, Vector2 worldMouse) {
         node.position.x += node.velocity.x * dt;
         node.position.y += node.velocity.y * dt;
     }
+
+    for (const auto& edge : edges) {
+        Node& a = nodes[edge.sourceId];
+        Node& b = nodes[edge.targetId];
+
+        Vector2 delta = { a.position.x - b.position.x, a.position.y - b.position.y };
+        float dist = sqrt(delta.x*delta.x + delta.y*delta.y);
+        
+        if (dist == 0) continue;
+
+        float displacement = dist - TARGET_LENGTH;
+        float forceMag = SPRING_K * displacement; 
+
+        float fx = (delta.x / dist) * forceMag;
+        float fy = (delta.y / dist) * forceMag;
+
+        a.force.x -= fx;
+        a.force.y -= fy;
+        b.force.x += fx;
+        b.force.y += fy;
+    }
+
 
     if (draggedNodeId != -1) {
         nodes[draggedNodeId].position = worldMouse;

@@ -45,6 +45,13 @@ int main(void) {
         BeginDrawing();
         BeginMode2D(camera);
         ClearBackground(BLACK);
+
+        for (const auto& edge: sim.edges) {
+            Vector2 start = sim.nodes[edge.sourceId].position;
+            Vector2 end = sim.nodes[edge.targetId].position;
+            DrawLineV(start, end, BLUE);
+        }
+
         for (int i = 0; i < sim.nodes.size(); ++i) {
             Color nodeColor = RAYWHITE;
             if (i == sim.draggedNodeId) {
