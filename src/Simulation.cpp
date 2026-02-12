@@ -11,7 +11,7 @@ void Simulation::Init() {
     }
 }
 
-float Simulation::CalculateDistance(Node p1, Node p2) {
+float Simulation::CalculateNodeDistance(Node p1, Node p2) {
     float dx = p1.position.x - p2.position.x;
     float dy = p1.position.y - p2.position.y;
 
@@ -20,7 +20,31 @@ float Simulation::CalculateDistance(Node p1, Node p2) {
     return distance;
 }
 
+float Simulation::CalculateMouseDistance(Vector2 mouse, Node p1) {
+    float dx = p1.position.x - mouse.x;
+    float dy = p1.position.y - mouse.y;
+    float distSq = dx * dx + dy + dy;
+    return std::sqrt(distSq);
+}
+
+void Simulation::CheckClickedNode() {
+    for (int i = 0; i < nodes.size(); ++i) {
+        if (CalculateMouseDistance(GetMousePosition(), nodes[i]) < NODE_RADIUS) {
+            draggedNodeId = i;
+            break;
+        }
+    }
+}
+
 void Simulation::Update(float dt) {
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        CheckClickedNode();
+    }
+
+    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        draggedNodeId = -1;
+    }
+
     for (auto& node : nodes) {
         node.force = {0.0f, 0.0f};
     }
@@ -29,7 +53,7 @@ void Simulation::Update(float dt) {
         for (int j = i + 1; j < nodes.size(); ++j) {
             float dx = nodes[i].position.x - nodes[j].position.x;
             float dy = nodes[i].position.y - nodes[j].position.y;
-            float distance = CalculateDistance(nodes[i], nodes[j]);
+            float distance = CalculateNodeDistance(nodes[i], nodes[j]);
 
             if (distance < 1.0f) distance = 1.0f;
 
@@ -67,5 +91,11 @@ void Simulation::Update(float dt) {
 
         node.position.x += node.velocity.x * dt;
         node.position.y += node.velocity.y * dt;
+    }
+
+    if (draggedNodeId != -1) {
+        nodes[draggedNodeId].position = GetMousePosition();
+        nodes[draggedNodeId].force = { 0.0f, 0.0f };
+        nodes[draggedNodeId].velocity = { 0.0f, 0.0f };
     }
 }

@@ -18,8 +18,12 @@ int main(void) {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        for (auto& node: sim.nodes) {
-            DrawCircleV(node.position, radius, RAYWHITE);
+        for (int i = 0; i < sim.nodes.size(); ++i) {
+            Color nodeColor = RAYWHITE;
+            if (i == sim.draggedNodeId) {
+                nodeColor = GREEN;
+            }
+            DrawCircleV(sim.nodes[i].position, radius, nodeColor);
         }
 
         DrawFPS(10, 10);
