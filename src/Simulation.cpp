@@ -1,18 +1,23 @@
 #include "Simulation.h"
 
 void Simulation::Init() {
-    const float MIN_POS = 100.0f; 
-    const float MAX_POS = 500.0f;
+    // Initialize in random positions
+    nodes.reserve(NUMBER_OF_NODES);
 
-    for (int i = 0; i < 30; ++i) {
-        Node newNode;
-        newNode.position.x = (float)GetRandomValue((int)MIN_POS, (int)MAX_POS);
-        newNode.position.y = (float)GetRandomValue((int)MIN_POS, (int)MAX_POS);
-        newNode.velocity = {0, 0};
-        newNode.force = {0, 0};
-        newNode.id = i; 
-        nodes.push_back(newNode);
+    for (int i = 0; i < NUMBER_OF_NODES; ++i) {
+        float x = (float)GetRandomValue((int)MIN_POS, (int)MAX_POS);
+        float y = (float)GetRandomValue((int)MIN_POS, (int)MAX_POS);
+        nodes.emplace_back(i, x, y);
     }
+}
+
+float Simulation::CalculateDistance(Node p1, Node p2) {
+    float dx = p1.position.x - p2.position.x;
+    float dy = p1.position.y - p2.position.y;
+
+    float distSq = dx*dx + dy*dy;
+    float distance = std::sqrt(distSq);
+    return distance;
 }
 
 void Simulation::Update(float dt) {
@@ -24,9 +29,7 @@ void Simulation::Update(float dt) {
         for (int j = i + 1; j < nodes.size(); ++j) {
             float dx = nodes[i].position.x - nodes[j].position.x;
             float dy = nodes[i].position.y - nodes[j].position.y;
-
-            float distSq = dx*dx + dy*dy;
-            float distance = std::sqrt(distSq);
+            float distance = CalculateDistance(nodes[i], nodes[j]);
 
             if (distance < 1.0f) distance = 1.0f;
 
@@ -66,4 +69,3 @@ void Simulation::Update(float dt) {
         node.position.y += node.velocity.y * dt;
     }
 }
-
