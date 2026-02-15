@@ -87,18 +87,6 @@ void Simulation::Update(float dt, Vector2 worldMouse) {
         node.force.y += dirY * 0.5f;
     }
 
-
-    for (auto& node : nodes) {
-        node.velocity.x += node.force.x * dt;
-        node.velocity.y += node.force.y * dt;
-
-        node.velocity.x *= 0.95f; 
-        node.velocity.y *= 0.95f;
-
-        node.position.x += node.velocity.x * dt;
-        node.position.y += node.velocity.y * dt;
-    }
-
     for (const auto& edge : edges) {
         Node& a = nodes[edge.sourceId];
         Node& b = nodes[edge.targetId];
@@ -118,6 +106,17 @@ void Simulation::Update(float dt, Vector2 worldMouse) {
         a.force.y -= fy;
         b.force.x += fx;
         b.force.y += fy;
+    }
+
+    for (auto& node : nodes) {
+        node.velocity.x += node.force.x * dt;
+        node.velocity.y += node.force.y * dt;
+
+        node.velocity.x *= 0.95f; 
+        node.velocity.y *= 0.95f;
+
+        node.position.x += node.velocity.x * dt;
+        node.position.y += node.velocity.y * dt;
     }
 
 

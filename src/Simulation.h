@@ -12,10 +12,10 @@ class Simulation {
         std::vector<Edge> edges;
 
         int draggedNodeId = -1;
-        static constexpr int NUMBER_OF_NODES = 10;
+        static constexpr float NUMBER_OF_NODES = 10;
         float REPULSION_FORCE = 2000.0f;
-        static constexpr float TARGET_LENGTH = 150.0f; // We want connected nodes to be this far apart
-        static constexpr float SPRING_K = 0.02f;       // Stiffness (how hard it pulls)
+        float TARGET_LENGTH = 150.0f; // We want connected nodes to be this far apart
+        float SPRING_K = 0.02f;       // Stiffness (how hard it pulls)
 
         void Init();
         void Update(float dt, Vector2 worldMouse);

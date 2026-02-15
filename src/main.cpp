@@ -16,6 +16,8 @@ static void DoControlMenu(Simulation& sim)
 {
 	ImGui::Begin("Physics Constants");
     ImGui::SliderFloat("Repulsion Force", &sim.REPULSION_FORCE, 0.0f, 5000.0f);
+    ImGui::SliderFloat("Target Length", &sim.TARGET_LENGTH, 10.0f, 500.0f);
+    ImGui::SliderFloat("Spring K", &sim.SPRING_K, 0.0f, 2.0f);
     ImGui::End();
 }
 
