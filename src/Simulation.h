@@ -21,7 +21,7 @@ class Simulation {
         float CalculateMouseDistance(Vector2 mouse, Node p1);
         const float SPAWN_LOWER = -10.0f; 
         const float SPAWN_UPPER = 10.0f;
-        const int NUMBER_OF_NODES = 30;
+        const int NUMBER_OF_NODES = 10;
         const int NODE_RADIUS = 8.0;
         const float REPULSION_FORCE = 2000.0f;
         const float TARGET_LENGTH = 150.0f; // We want connected nodes to be this far apart
