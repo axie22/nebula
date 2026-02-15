@@ -1,8 +1,25 @@
 #include "Simulation.h"
 #include "Node.h"
+
+#include "imgui.h"
+#include "rlImGui.h"
+
+
 #include "raymath.h"
 #include <algorithm>
 #include <raylib.h>
+
+static void DoControlMenu(Simulation& sim);
+
+
+static void DoControlMenu(Simulation& sim)
+{
+	ImGui::Begin("Physics Constants");
+    ImGui::SliderFloat("Repulsion Force", &sim.REPULSION_FORCE, 0.0f, 5000.0f);
+    ImGui::End();
+}
+
+
 
 int main(void) {
     const int screenWidth = 800;
@@ -24,6 +41,9 @@ int main(void) {
     // Simulation setup
     Simulation sim;
     sim.Init();
+
+    // ImGui setup
+    rlImGuiSetup(true); 
     
     while (!WindowShouldClose()) {
         float wheel = GetMouseWheelMove();
@@ -62,8 +82,15 @@ int main(void) {
 
         DrawFPS(10, 10);
         EndMode2D();
+
+        rlImGuiBegin();
+        DoControlMenu(sim);
+        rlImGuiEnd();
+
         EndDrawing();
     }
+
+    rlImGuiShutdown();
     CloseWindow();
     return 0;
 }
