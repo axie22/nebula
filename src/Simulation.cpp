@@ -17,7 +17,7 @@ void Simulation::Init() {
     edges.emplace_back((int)nodes.size() - 1, 0);
 }
 
-float Simulation::CalculateNodeDistance(Node p1, Node p2) {
+float Simulation::CalculateNodeDistance(const Node& p1, const Node& p2) {
     float dx = p1.position.x - p2.position.x;
     float dy = p1.position.y - p2.position.y;
 
@@ -42,19 +42,29 @@ void Simulation::CheckClickedNode(Vector2 worldMouse) {
     }
 }
 
-void Simulation::Update(float dt, Vector2 worldMouse) {
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        CheckClickedNode(worldMouse);
-    }
+void Simulation::CenterNodes() {
+    for (auto& node : nodes) {
+        float dirX = center.x - node.position.x;
+        float dirY = center.y - node.position.y;
 
-    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-        draggedNodeId = -1;
+        node.force.x += dirX * 0.5f;
+        node.force.y += dirY * 0.5f;
     }
+}
 
+void Simulation::UpdateDraggedNode(Vector2 worldMouse) {
+    nodes[draggedNodeId].position = worldMouse;
+    nodes[draggedNodeId].force = { 0.0f, 0.0f };
+    nodes[draggedNodeId].velocity = { 0.0f, 0.0f };
+}
+
+void Simulation::ResetForce() {
     for (auto& node : nodes) {
         node.force = {0.0f, 0.0f};
     }
+}
 
+void Simulation::ApplyRepulsionForces() {
     for (int i = 0; i < nodes.size(); ++i) {
         for (int j = i + 1; j < nodes.size(); ++j) {
             float dx = nodes[i].position.x - nodes[j].position.x;
@@ -78,15 +88,9 @@ void Simulation::Update(float dt, Vector2 worldMouse) {
             nodes[j].force.y -= fy;
         }
     }
+}
 
-    for (auto& node : nodes) {
-        float dirX = center.x - node.position.x;
-        float dirY = center.y - node.position.y;
-
-        node.force.x += dirX * 0.5f;
-        node.force.y += dirY * 0.5f;
-    }
-
+void Simulation::UpdateEdges() {
     for (const auto& edge : edges) {
         Node& a = nodes[edge.sourceId];
         Node& b = nodes[edge.targetId];
@@ -107,8 +111,13 @@ void Simulation::Update(float dt, Vector2 worldMouse) {
         b.force.x += fx;
         b.force.y += fy;
     }
+}
 
-    for (auto& node : nodes) {
+void Simulation::UpdatePositions(float dt) {
+    for (int i = 0; i < nodes.size(); ++i) {
+        if (i == draggedNodeId) continue;
+        Node& node = nodes[i];
+
         node.velocity.x += node.force.x * dt;
         node.velocity.y += node.force.y * dt;
 
@@ -118,11 +127,28 @@ void Simulation::Update(float dt, Vector2 worldMouse) {
         node.position.x += node.velocity.x * dt;
         node.position.y += node.velocity.y * dt;
     }
+}
 
+void Simulation::Update(float dt, Vector2 worldMouse) {
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        CheckClickedNode(worldMouse);
+    }
+
+    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        draggedNodeId = -1;
+    }
+
+    ResetForce();
+
+    ApplyRepulsionForces();
+
+    CenterNodes();
+
+    UpdateEdges();
+
+    UpdatePositions(dt);
 
     if (draggedNodeId != -1) {
-        nodes[draggedNodeId].position = worldMouse;
-        nodes[draggedNodeId].force = { 0.0f, 0.0f };
-        nodes[draggedNodeId].velocity = { 0.0f, 0.0f };
+        UpdateDraggedNode(worldMouse);
     }
 }
