@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(raylib REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 # ImGui + rlImGui Library
 set(IMGUI_DIR "vendor/imgui")
@@ -31,6 +32,7 @@ target_link_libraries(ImGuiLib PUBLIC raylib)
 add_executable(CodeNebula 
     src/main.cpp 
     src/Simulation.cpp
+    src/Graph.cpp
 )
 
-target_link_libraries(CodeNebula PRIVATE ImGuiLib)
+target_link_libraries(CodeNebula PRIVATE ImGuiLib nlohmann_json::nlohmann_json)
