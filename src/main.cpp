@@ -1,5 +1,6 @@
 #include "Simulation.h"
 #include "Node.h"
+#include "Graph.h"
 
 #include "imgui.h"
 #include "rlImGui.h"
@@ -46,6 +47,10 @@ int main(void) {
 
     // ImGui setup
     rlImGuiSetup(true); 
+
+    // Load Graph
+    Graph loader;
+    loader.LoadGraph(sim, "../graph.json");
     
     while (!WindowShouldClose()) {
         float wheel = GetMouseWheelMove();
