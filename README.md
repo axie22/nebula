@@ -1,9 +1,22 @@
 # Nebula
 
-## Todo
+## Workflow
 
-- ImGui Controls
-  - The Problem: Tuning your "Gravity" (0.5f) or "Repulsion" (2000.0f) requires recompiling the code
-  - The Solution: Add a UI overlay with Sliders to tweak physics in real-time.
-  - The Tech: You’ll integrate Dear ImGui (the industry standard for C++ tools).
-  - The UX: A semi-transparent window floating over your simulation with sliders for Gravity, Friction, and Repulsion.
+1. User pastes URL into a text box on your website.
+2. Website sends URL to your Python Backend.
+3. Backend clones repo, parses it, and returns:
+
+```JSON
+{
+  "nodes": [
+    {"id": 0, "name": "main.cpp", "size": 100},
+    {"id": 1, "name": "Simulation.h", "size": 50}
+  ],
+  "edges": [
+    {"source": 0, "target": 1}
+  ]
+}
+```
+
+4. C++ App (WASM) receives this JSON.
+5. C++ App runs sim.InitFromJSON(...)
