@@ -12,6 +12,8 @@ class Simulation {
         std::vector<Edge> edges;
 
         int draggedNodeId = -1;
+        int hoverNodeId = -1;
+
         static constexpr float NUMBER_OF_NODES = 100;
         float REPULSION_FORCE = 2000.0f;
         float TARGET_LENGTH = 150.0f; // We want connected nodes to be this far apart
@@ -31,7 +33,7 @@ class Simulation {
         
         static constexpr int NODE_RADIUS = 8.0;
 
-        void CheckClickedNode(Vector2 worldMouse);
+        int CheckMouseNodeDistance(Vector2 worldMouse);
         void ResetForce();
         void CenterNodes();
         void UpdateEdges();

@@ -92,6 +92,9 @@ int main(void) {
 
         rlImGuiBegin();
         DoControlMenu(sim);
+        if (sim.hoverNodeId != -1) {
+            ImGui::SetTooltip("%s", sim.nodes[sim.hoverNodeId].name.c_str());
+        }
         rlImGuiEnd();
 
         EndDrawing();

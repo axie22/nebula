@@ -24,6 +24,9 @@ void Graph::LoadGraph(Simulation& sim, const std::string& filename) {
 
         for (const auto& entry : data["edges"]) {
             sim.edges.emplace_back(entry["source"], entry["target"]);
+            
+            sim.nodes[entry["source"]].outdegree++;
+            sim.nodes[entry["target"]].indegree++;
         }
     } else {
         std::cerr << "File not found!" << std::endl;
