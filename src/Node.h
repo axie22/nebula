@@ -7,6 +7,7 @@ struct Node {
     Vector2 force = { 0.0f, 0.0f };
     float mass = 10.0f;
     int id;
+    std::string name;
 
-    Node(int id, float x, float y) : id(id), position{x, y} {}
+    Node(int id, std::string name, float x, float y) : id(id), position{x, y} {}
 };

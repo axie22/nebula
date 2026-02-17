@@ -8,7 +8,7 @@ void Simulation::Init() {
     for (int i = 0; i < NUMBER_OF_NODES; ++i) {
         float x = center.x + (float)GetRandomValue((int)SPAWN_LOWER, (int)SPAWN_UPPER);
         float y = center.y + (float)GetRandomValue((int)SPAWN_LOWER, (int)SPAWN_UPPER);
-        nodes.emplace_back(i, x, y);
+        nodes.emplace_back(i, "dummy", x, y);
     }
 
     for (int i = 0; i < nodes.size() - 1; ++i) {
