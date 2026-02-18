@@ -1,5 +1,4 @@
 from pathlib import Path
-
 from backend.repo_parser import RepoParser
 import json
 
@@ -13,7 +12,9 @@ def main():
     print("Scanning...")
     parser.scan()
     print("Dependency map", parser.dependency_map)
-    parser.serialize()
+    
+    output_path = "graph.json"
+    parser.serialize(output_path)
 
 
 if __name__ == "__main__":
