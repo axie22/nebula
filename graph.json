@@ -1,14 +1,26 @@
 {
-  "nodes": [
-    { "id": 0, "name": "main.cpp" },
-    { "id": 1, "name": "Simulation.h" },
-    { "id": 2, "name": "Node.h" },
-    { "id": 3, "name": "Vector2.h" }
-  ],
-  "edges": [
-    { "source": 0, "target": 1 },
-    { "source": 1, "target": 2 },
-    { "source": 2, "target": 3 },
-    { "source": 1, "target": 3 }
-  ]
+    "nodes": [
+        {
+            "id": 0,
+            "name": "sim.h"
+        },
+        {
+            "id": 1,
+            "name": "sim.cpp"
+        },
+        {
+            "id": 2,
+            "name": "main.cpp"
+        }
+    ],
+    "edges": [
+        {
+            "source": 1,
+            "target": 0
+        },
+        {
+            "source": 2,
+            "target": 0
+        }
+    ]
 }

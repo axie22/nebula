@@ -1,5 +1,6 @@
 import os
 import re
+import json
 from typing import Final, List, Set, Dict
 
 VALID_FILE_TYPES: Final[Set] = {".cpp", ".h", ".py", ".ts", ".js", ".rs"}
@@ -42,6 +43,11 @@ class RepoParser:
         return self.source_files
     
     def scan(self):
+        """
+        Docstring for scan
+        
+        :param self: Description
+        """
         for relative_file in self.source_files:
             full_path = os.path.join(self.repo_path, relative_file)
 
@@ -59,4 +65,51 @@ class RepoParser:
             dependencies = re.findall(REGEX_MAP[ext], data)
             if dependencies:
                 self.dependency_map[relative_file] = dependencies
-  
+    
+    def serialize(self):
+        """
+        Docstring for serialize
+        
+        :param self: Description
+        """
+        nodes = []
+        edges = []
+        for name, id in self.file_map.items():
+            nodes.append({
+                "id": id,
+                "name": name
+            })
+
+        # Build the Edges List
+        for source_file, dependencies in self.dependency_map.items():
+            if source_file not in self.file_map:
+                continue
+            
+            source_id = self.file_map[source_file]
+            source_dir = os.path.dirname(source_file)
+
+            for dep_str in dependencies:
+                target_id = None
+                potential_path = os.path.normpath(os.path.join(source_dir, dep_str))
+                
+                # Check if this resolved path is in our map
+                if potential_path in self.file_map:
+                    target_id = self.file_map[potential_path]
+                
+                if target_id is None:
+                    pass
+                if target_id is not None:
+                    edges.append({
+                        "source": source_id,
+                        "target": target_id
+                    })
+
+        output_data = {
+            "nodes": nodes,
+            "edges": edges
+        }
+        
+        with open("graph.json", "w", encoding="utf-8") as f:
+            json.dump(output_data, f, indent=4)
+        
+        print(f"Serialized {len(nodes)} nodes and {len(edges)} edges to graph.json")

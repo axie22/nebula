@@ -1,3 +1,5 @@
 .vscode/
 build/
 backend/test_repo/
+data.json
+graph.json
