@@ -9,6 +9,9 @@ def main():
     parser = RepoParser(str(repo_dir))
     parser.walk()
     print(f"Source files: {parser.source_files}")
+    print("Scanning...")
+    parser.scan()
+    print("Dependency map", parser.dependency_map)
 
 
 if __name__ == "__main__":
