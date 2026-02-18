@@ -135,7 +135,11 @@ void Simulation::Update(float dt, Vector2 worldMouse) {
     hoverNodeId = CheckMouseNodeDistance(worldMouse);
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        draggedNodeId = CheckMouseNodeDistance(worldMouse);
+        int clickedNode = CheckMouseNodeDistance(worldMouse);
+        draggedNodeId = clickedNode;
+        if (clickedNode != -1) {
+            selectedNodeId = clickedNode;
+        }
     }
 
     if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {

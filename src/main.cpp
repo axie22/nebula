@@ -11,7 +11,8 @@
 #include <raylib.h>
 
 static void DoControlMenu(Simulation& sim);
-
+static void DoNodeInspector(Node& node);
+static void DrawDirectedEdge(Vector2 start, Vector2 end, float nodeRadius, Color color);
 
 static void DoControlMenu(Simulation& sim)
 {
@@ -20,6 +21,52 @@ static void DoControlMenu(Simulation& sim)
     ImGui::SliderFloat("Target Length", &sim.TARGET_LENGTH, 10.0f, 500.0f);
     ImGui::SliderFloat("Spring K", &sim.SPRING_K, 0.0f, 2.0f);
     ImGui::End();
+}
+
+static void DoNodeInspector(Node& node) {
+    ImGui::Begin("File Information");
+    ImGui::Text("File Name: %s", node.name.c_str());
+    ImGui::Text("Indegree: %d", node.indegree);
+    ImGui::Text("Outdegree: %d", node.outdegree);
+    ImGui::End();
+}
+
+void DrawDirectedEdge(Vector2 start, Vector2 end, float nodeRadius, Color color) {
+    Vector2 delta = { end.x - start.x, end.y - start.y };
+    float length = sqrt(delta.x*delta.x + delta.y*delta.y);
+
+    if (length < nodeRadius * 2) return; 
+
+    Vector2 direction = { delta.x / length, delta.y / length };
+
+    // --- MATH SECTION ---
+    Vector2 startSurface = { 
+        start.x + (direction.x * nodeRadius), 
+        start.y + (direction.y * nodeRadius) 
+    };
+    
+    Vector2 endSurface = { 
+        end.x - (direction.x * nodeRadius), 
+        end.y - (direction.y * nodeRadius) 
+    };
+
+    DrawLineV(startSurface, endSurface, color);
+
+    float arrowSize = 6.0f;
+    float arrowAngle = 30.0f * DEG2RAD;
+    float angle = atan2(delta.y, delta.x);
+
+    Vector2 p1 = {
+        endSurface.x - arrowSize * cos(angle - arrowAngle),
+        endSurface.y - arrowSize * sin(angle - arrowAngle)
+    };
+    
+    Vector2 p2 = {
+        endSurface.x - arrowSize * cos(angle + arrowAngle),
+        endSurface.y - arrowSize * sin(angle + arrowAngle)
+    };
+
+    DrawTriangle(endSurface, p2, p1, color);
 }
 
 
@@ -73,12 +120,6 @@ int main(void) {
         BeginMode2D(camera);
         ClearBackground(BLACK);
 
-        for (const auto& edge: sim.edges) {
-            Vector2 start = sim.nodes[edge.sourceId].position;
-            Vector2 end = sim.nodes[edge.targetId].position;
-            DrawLineV(start, end, BLUE);
-        }
-
         for (int i = 0; i < sim.nodes.size(); ++i) {
             Color nodeColor = RAYWHITE;
             if (i == sim.draggedNodeId) {
@@ -87,13 +128,22 @@ int main(void) {
             DrawCircleV(sim.nodes[i].position, radius, nodeColor);
         }
 
-        DrawFPS(10, 10);
+        for (const auto& edge: sim.edges) {
+            Vector2 start = sim.nodes[edge.sourceId].position;
+            Vector2 end = sim.nodes[edge.targetId].position;
+            DrawDirectedEdge(start, end , sim.NODE_RADIUS, BLUE);
+        }
+
+        DrawFPS(5, 5);
         EndMode2D();
 
         rlImGuiBegin();
         DoControlMenu(sim);
         if (sim.hoverNodeId != -1) {
             ImGui::SetTooltip("%s", sim.nodes[sim.hoverNodeId].name.c_str());
+        }
+        if (sim.selectedNodeId != -1) {
+            DoNodeInspector(sim.nodes[sim.selectedNodeId]);
         }
         rlImGuiEnd();
 

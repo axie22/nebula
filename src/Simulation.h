@@ -13,8 +13,10 @@ class Simulation {
 
         int draggedNodeId = -1;
         int hoverNodeId = -1;
+        int selectedNodeId = -1;
 
         static constexpr float NUMBER_OF_NODES = 100;
+        static constexpr int NODE_RADIUS = 8.0;
         float REPULSION_FORCE = 2000.0f;
         float TARGET_LENGTH = 150.0f; // We want connected nodes to be this far apart
         float SPRING_K = 0.02f;       // Stiffness (how hard it pulls)
@@ -30,8 +32,6 @@ class Simulation {
         float CalculateMouseDistance(Vector2 mouse, Node p1);
         static constexpr float SPAWN_LOWER = -10.0f; 
         static constexpr float SPAWN_UPPER = 10.0f;
-        
-        static constexpr int NODE_RADIUS = 8.0;
 
         int CheckMouseNodeDistance(Vector2 worldMouse);
         void ResetForce();
