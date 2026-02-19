@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(CodeNebula VERSION 1.0)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(raylib REQUIRED)
@@ -20,6 +20,7 @@ add_library(ImGuiLib STATIC
     "${IMGUI_DIR}/imgui_widgets.cpp"
     "${IMGUI_DIR}/imgui_demo.cpp"
     "${RLIMGUI_DIR}/rlImGui.cpp"
+    "${IMGUI_DIR}/misc/cpp/imgui_stdlib.cpp"
 )
 
 target_include_directories(ImGuiLib PUBLIC 
