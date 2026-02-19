@@ -1,8 +1,17 @@
+from fastapi import FastAPI
+from pydantic import BaseModel
+
 from backend.gitcloner import GitCloner
 from backend.repo_parser import RepoParser
 
-def process_repo(url: str):
-    cloner = GitCloner(url)
+app = FastAPI()
+
+class RepoRequest(BaseModel):
+    url: str
+
+@app.post("/process")
+def process_repo(request: RepoRequest):
+    cloner = GitCloner(request.url)
     
     with cloner.clone() as repo_path:
         print(f"Repo cloned to temporary path: {repo_path}")
@@ -17,5 +26,5 @@ def process_repo(url: str):
         
     print("Processing complete. Temp files cleaned up.")
 
-if __name__ == "__main__":
-    process_repo("https://github.com/axie22/Orbit")
+# if __name__ == "__main__":
+#     process_repo("https://github.com/axie22/Orbit")
