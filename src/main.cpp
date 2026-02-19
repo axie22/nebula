@@ -7,12 +7,30 @@
 
 
 #include "raymath.h"
+#include <string>
+#include <misc/cpp/imgui_stdlib.h>
 #include <algorithm>
 #include <raylib.h>
 
+static bool DrawUserInputBox(std::string& github_url);
 static void DoControlMenu(Simulation& sim);
 static void DoNodeInspector(Node& node);
 static void DrawDirectedEdge(Vector2 start, Vector2 end, float nodeRadius, Color color);
+
+static bool DrawUserInputBox(std::string& github_url) {
+    std::string github_prefix = "https://github.com/";
+    bool shouldFetch = false;
+    
+    ImGui::Begin("Github URL");
+    ImGui::InputText("URL:", &github_url);
+    
+    if (ImGui::Button("Visualize") && github_url.starts_with(github_prefix)) {
+        shouldFetch = true;
+    }
+    
+    ImGui::End();
+    return shouldFetch;
+}
 
 static void DoControlMenu(Simulation& sim)
 {
@@ -78,6 +96,7 @@ int main(void) {
     const float minZoom = 0.1f;
     const float maxZoom = 5.0f;
     const float zoomReductionSpeed = 10.0f;
+    std::string github_url; 
 
     // Raylib setup
     InitWindow(screenWidth, screenHeight, "Nebula");
@@ -138,6 +157,12 @@ int main(void) {
         EndMode2D();
 
         rlImGuiBegin();
+
+        if (DrawUserInputBox(github_url)) {
+            // TRIGGER NETWORK REQUEST HERE
+            printf("Fetching URL: %s\n", github_url.c_str());
+        }
+
         DoControlMenu(sim);
         if (sim.hoverNodeId != -1) {
             ImGui::SetTooltip("%s", sim.nodes[sim.hoverNodeId].name.c_str());
