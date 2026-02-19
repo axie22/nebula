@@ -176,7 +176,7 @@ class RepoParser:
         
         return None
 
-    def serialize(self, output_path: str = "graph.json"):
+    def get_graph_data(self):
         """
         Serializes the dependency graph to JSON.
         """
@@ -209,9 +209,11 @@ class RepoParser:
             "edges": edges
         }
         
-        try:
-            with open(output_path, "w", encoding="utf-8") as f:
-                json.dump(output_data, f, indent=4)
-            print(f"Serialized {len(nodes)} nodes and {len(edges)} edges to {output_path}")
-        except Exception as e:
-            print(f"Failed to write to {output_path}: {e}")
+        return output_data
+
+        # try:
+        #     with open(output_path, "w", encoding="utf-8") as f:
+        #         json.dump(output_data, f, indent=4)
+        #     print(f"Serialized {len(nodes)} nodes and {len(edges)} edges to {output_path}")
+        # except Exception as e:
+        #     print(f"Failed to write to {output_path}: {e}")

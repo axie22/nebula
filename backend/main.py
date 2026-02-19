@@ -22,9 +22,11 @@ def process_repo(request: RepoRequest):
         # Run the pipeline
         parser.walk()
         parser.scan()
-        parser.serialize("graph.json")
+        graph_data = parser.get_graph_data()
         
     print("Processing complete. Temp files cleaned up.")
+    
+    return graph_data
 
 # if __name__ == "__main__":
 #     process_repo("https://github.com/axie22/Orbit")

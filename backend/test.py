@@ -14,7 +14,7 @@ def main():
     print("Dependency map", parser.dependency_map)
     
     output_path = "graph.json"
-    parser.serialize(output_path)
+    # parser.serialize(output_path)
 
 
 if __name__ == "__main__":
