@@ -17,15 +17,30 @@
 
 using json = nlohmann::json;
 
+struct AppContext {
+    Camera2D camera;
+    Simulation sim;
+    Graph graph;
+    std::string github_url;
+    const int screenWidth = 800;
+    const int screenHeight = 600;
+    const int radius = 8.0f;
+    const float minZoom = 0.1f;
+    const float maxZoom = 5.0f;
+    const float zoomReductionSpeed = 10.0f;
+};
+
+
 static bool DrawUserInputBox(std::string& github_url);
 static void DoControlMenu(Simulation& sim);
 static void DoNodeInspector(Node& node);
 static void DrawDirectedEdge(Vector2 start, Vector2 end, float nodeRadius, Color color);
-
+void UpdateDrawFrame(void* arg);
 std::string getGraph(std::string github_url, httplib::Client& cli);
 
 static std::future<std::string> graphFuture;
 static bool isFetching = false;
+httplib::Client cli("localhost", 8000); 
 
 static bool DrawUserInputBox(std::string& github_url) {
     std::string github_prefix = "https://github.com/";
@@ -114,6 +129,79 @@ std::string getGraph(std::string github_url, httplib::Client& cli) {
     }
 }
 
+void UpdateDrawFrame(void *arg) {
+    AppContext* ctx = static_cast<AppContext*>(arg);
+    Camera2D& camera = ctx->camera;
+    Simulation& sim = ctx->sim;
+    Graph& loader = ctx->graph;
+    std::string& github_url = ctx->github_url;
+
+    float wheel = GetMouseWheelMove();
+    if (wheel != 0) {
+        camera.zoom += (wheel / ctx->zoomReductionSpeed);
+        camera.zoom = std::clamp(camera.zoom, ctx->minZoom, ctx->maxZoom);
+    }
+
+    if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+        Vector2 delta = GetMouseDelta();
+        Vector2 scaledDelta = Vector2Scale(delta, 1.0f / camera.zoom);
+        camera.target = Vector2Subtract(camera.target, scaledDelta);
+    }
+
+    float dt = GetFrameTime();
+    Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), camera);
+    sim.Update(dt, mouseWorldPos);
+    
+    BeginDrawing();
+    BeginMode2D(camera);
+    ClearBackground(BLACK);
+
+    for (int i = 0; i < sim.nodes.size(); ++i) {
+        Color nodeColor = RAYWHITE;
+        if (i == sim.draggedNodeId) {
+            nodeColor = GREEN;
+        }
+        DrawCircleV(sim.nodes[i].position, ctx->radius, nodeColor);
+    }
+
+    for (const auto& edge: sim.edges) {
+        Vector2 start = sim.nodes[edge.sourceId].position;
+        Vector2 end = sim.nodes[edge.targetId].position;
+        DrawDirectedEdge(start, end , sim.NODE_RADIUS, BLUE);
+    }
+
+    DrawFPS(5, 5);
+    EndMode2D();
+
+    rlImGuiBegin();
+
+    if (DrawUserInputBox(github_url) && !isFetching) {
+        graphFuture = std::async(std::launch::async, getGraph, github_url, std::ref(cli));
+        isFetching = true;
+    }
+
+    if (isFetching) {
+        ImGui::Text("Fetching repository data... Please wait.");
+        if (graphFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+            std::string result = graphFuture.get(); 
+            isFetching = false;
+            sim.ResetGraph();
+            loader.LoadGraphJSON(sim, result);
+        }
+    }
+
+    DoControlMenu(sim);
+    if (sim.hoverNodeId != -1) {
+        ImGui::SetTooltip("%s", sim.nodes[sim.hoverNodeId].name.c_str());
+    }
+    if (sim.selectedNodeId != -1) {
+        DoNodeInspector(sim.nodes[sim.selectedNodeId]);
+    }
+    rlImGuiEnd();
+
+    EndDrawing();
+}
+
 
 
 int main(void) {
@@ -132,9 +220,6 @@ int main(void) {
     }
 
     std::string endpoint(raw_endpoint);
-
-    // http client setup
-    httplib::Client cli("localhost", 8000); 
     
     // Raylib setup
     InitWindow(screenWidth, screenHeight, "Nebula");
@@ -154,73 +239,15 @@ int main(void) {
 
     // Load Graph
     Graph loader;
-    // loader.LoadGraph(sim, "../graph.json");
+
+    AppContext appContext;
+    appContext.camera = camera;
+    appContext.sim = sim;
+    appContext.graph = loader;
+    appContext.github_url = github_url;
     
     while (!WindowShouldClose()) {
-        float wheel = GetMouseWheelMove();
-        if (wheel != 0) {
-            camera.zoom += (wheel / zoomReductionSpeed);
-            camera.zoom = std::clamp(camera.zoom, minZoom, maxZoom);
-        }
-
-        if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-            Vector2 delta = GetMouseDelta();
-            Vector2 scaledDelta = Vector2Scale(delta, 1.0f / camera.zoom);
-            camera.target = Vector2Subtract(camera.target, scaledDelta);
-        }
-
-        float dt = GetFrameTime();
-        Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), camera);
-        sim.Update(dt, mouseWorldPos);
-        
-        BeginDrawing();
-        BeginMode2D(camera);
-        ClearBackground(BLACK);
-
-        for (int i = 0; i < sim.nodes.size(); ++i) {
-            Color nodeColor = RAYWHITE;
-            if (i == sim.draggedNodeId) {
-                nodeColor = GREEN;
-            }
-            DrawCircleV(sim.nodes[i].position, radius, nodeColor);
-        }
-
-        for (const auto& edge: sim.edges) {
-            Vector2 start = sim.nodes[edge.sourceId].position;
-            Vector2 end = sim.nodes[edge.targetId].position;
-            DrawDirectedEdge(start, end , sim.NODE_RADIUS, BLUE);
-        }
-
-        DrawFPS(5, 5);
-        EndMode2D();
-
-        rlImGuiBegin();
-
-        if (DrawUserInputBox(github_url) && !isFetching) {
-            graphFuture = std::async(std::launch::async, getGraph, github_url, std::ref(cli));
-            isFetching = true;
-        }
-
-        if (isFetching) {
-            ImGui::Text("Fetching repository data... Please wait.");
-            if (graphFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-                std::string result = graphFuture.get(); 
-                isFetching = false;
-                sim.ResetGraph();
-                loader.LoadGraphJSON(sim, result);
-            }
-        }
-
-        DoControlMenu(sim);
-        if (sim.hoverNodeId != -1) {
-            ImGui::SetTooltip("%s", sim.nodes[sim.hoverNodeId].name.c_str());
-        }
-        if (sim.selectedNodeId != -1) {
-            DoNodeInspector(sim.nodes[sim.selectedNodeId]);
-        }
-        rlImGuiEnd();
-
-        EndDrawing();
+        UpdateDrawFrame(&appContext);
     }
 
     rlImGuiShutdown();
