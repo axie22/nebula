@@ -30,7 +30,7 @@ static bool isFetching = false;
 static bool DrawUserInputBox(std::string& github_url) {
     std::string github_prefix = "https://github.com/";
     bool shouldFetch = false;
-    
+    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
     ImGui::Begin("Github URL");
     ImGui::InputText("URL:", &github_url);
     
@@ -44,6 +44,7 @@ static bool DrawUserInputBox(std::string& github_url) {
 
 static void DoControlMenu(Simulation& sim)
 {
+    ImGui::SetNextWindowPos(ImVec2(10, 100), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Physics Constants");
     ImGui::SliderFloat("Repulsion Force", &sim.REPULSION_FORCE, 0.0f, 5000.0f);
     ImGui::SliderFloat("Target Length", &sim.TARGET_LENGTH, 10.0f, 500.0f);
@@ -123,12 +124,15 @@ int main(void) {
     const float maxZoom = 5.0f;
     const float zoomReductionSpeed = 10.0f;
     std::string github_url; 
-    std::string endpoint = std::getenv("ENDPOINT_URL");
+    const char* raw_endpoint = std::getenv("ENDPOINT_URL");
 
-    if (endpoint.empty()) {
-        printf("Endpoint environment variable not set");
+    if (raw_endpoint == nullptr) {
+        printf("Endpoint environment variable not set\n");
         return 1;
     }
+
+    std::string endpoint(raw_endpoint);
+
     // http client setup
     httplib::Client cli(endpoint, 8000); 
 
@@ -202,8 +206,8 @@ int main(void) {
             if (graphFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
                 std::string result = graphFuture.get(); 
                 isFetching = false;
-
-                // parseJsonGraph(result);
+                sim.ResetGraph();
+                loader.LoadGraphJSON(sim, result);
             }
         }
 

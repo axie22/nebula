@@ -23,6 +23,7 @@ class Simulation {
 
         void Init();
         void Update(float dt, Vector2 worldMouse);
+        void ResetGraph();
 
         
 

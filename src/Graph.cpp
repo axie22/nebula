@@ -7,6 +7,32 @@ float Graph::GetRandomPosition() {
     return rand;
 }
 
+void Graph::LoadGraphJSON(Simulation& sim, std::string data) {
+    json json_data;
+    try {
+        json_data = json::parse(data);
+    } catch (json::parse_error& e) {
+        std::cerr << "Parse error: " << e.what() << std::endl;
+        return;
+    }
+
+    if (!json_data.contains("nodes") || !json_data.contains("edges")) {
+        std::cerr << "Invalid JSON format: missing nodes or edges." << std::endl;
+        return;
+    }
+
+    for (const auto& entry : json_data["nodes"]) {
+        sim.nodes.emplace_back(entry["id"], entry["name"], GetRandomPosition(), GetRandomPosition());
+    }
+
+    for (const auto& entry : json_data["edges"]) {
+        sim.edges.emplace_back(entry["source"], entry["target"]);
+
+        sim.nodes[entry["source"]].outdegree++;
+        sim.nodes[entry["target"]].indegree++;
+    }
+}
+
 void Graph::LoadGraph(Simulation& sim, const std::string& filename) {
     std::ifstream file(filename);
     // read json file
@@ -24,7 +50,7 @@ void Graph::LoadGraph(Simulation& sim, const std::string& filename) {
 
         for (const auto& entry : data["edges"]) {
             sim.edges.emplace_back(entry["source"], entry["target"]);
-            
+
             sim.nodes[entry["source"]].outdegree++;
             sim.nodes[entry["target"]].indegree++;
         }

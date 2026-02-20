@@ -20,3 +20,13 @@
 
 4. C++ App (WASM) receives this JSON.
 5. C++ App runs sim.InitFromJSON(...)
+
+## Usage
+
+**Set Environment Variables**
+
+```bash
+set -a; source .env; set +a
+
+./build/CodeNebula
+```

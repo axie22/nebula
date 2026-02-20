@@ -5,3 +5,4 @@ data.json
 graph.json
 Pipfile.lock
 .env
+imgui.ini

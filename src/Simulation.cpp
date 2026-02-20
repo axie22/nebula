@@ -131,6 +131,14 @@ void Simulation::UpdatePositions(float dt) {
     }
 }
 
+void Simulation::ResetGraph() {
+    hoverNodeId = -1;
+    draggedNodeId = -1;
+    selectedNodeId = -1;
+    nodes.clear();
+    edges.clear();
+}
+
 void Simulation::Update(float dt, Vector2 worldMouse) {
     hoverNodeId = CheckMouseNodeDistance(worldMouse);
 

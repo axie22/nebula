@@ -11,6 +11,7 @@
 class Graph {
     public:
         void LoadGraph(Simulation& sim, const std::string& filename);
+        void LoadGraphJSON(Simulation& sim, std::string data);
 
     private:
         float GetRandomPosition();
