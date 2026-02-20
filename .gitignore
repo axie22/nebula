@@ -4,3 +4,4 @@ backend/test_repo/
 data.json
 graph.json
 Pipfile.lock
+.env

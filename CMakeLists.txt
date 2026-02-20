@@ -12,6 +12,9 @@ find_package(nlohmann_json REQUIRED)
 set(IMGUI_DIR "vendor/imgui")
 set(RLIMGUI_DIR "vendor/rlImGui")
 
+# httplib library
+set(HTTPLIB_DIR "vendor/httplib")
+
 # Create a library target named "ImGuiLib"
 add_library(ImGuiLib STATIC
     "${IMGUI_DIR}/imgui.cpp"
@@ -23,9 +26,16 @@ add_library(ImGuiLib STATIC
     "${IMGUI_DIR}/misc/cpp/imgui_stdlib.cpp"
 )
 
+# Create http library
+add_library(HttpLib INTERFACE)
+
 target_include_directories(ImGuiLib PUBLIC 
     "${IMGUI_DIR}" 
     "${RLIMGUI_DIR}"
+)
+
+target_include_directories(HttpLib INTERFACE
+    "${HTTPLIB_DIR}"
 )
 
 target_link_libraries(ImGuiLib PUBLIC raylib)
@@ -36,4 +46,4 @@ add_executable(CodeNebula
     src/Graph.cpp
 )
 
-target_link_libraries(CodeNebula PRIVATE ImGuiLib nlohmann_json::nlohmann_json)
+target_link_libraries(CodeNebula PRIVATE ImGuiLib nlohmann_json::nlohmann_json HttpLib)

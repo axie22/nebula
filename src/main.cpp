@@ -1,21 +1,31 @@
-#include "Simulation.h"
-#include "Node.h"
 #include "Graph.h"
+#include "Node.h"
+#include "Simulation.h"
 
-#include "imgui.h"
-#include "rlImGui.h"
-
-
-#include "raymath.h"
-#include <string>
+#include <httplib.h>
+#include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
-#include <algorithm>
+#include <nlohmann/json.hpp>
 #include <raylib.h>
+#include <raymath.h>
+#include <rlImGui.h>
+
+#include <algorithm>
+#include <string>
+#include <future>
+#include <chrono>
+
+using json = nlohmann::json;
 
 static bool DrawUserInputBox(std::string& github_url);
 static void DoControlMenu(Simulation& sim);
 static void DoNodeInspector(Node& node);
 static void DrawDirectedEdge(Vector2 start, Vector2 end, float nodeRadius, Color color);
+
+std::string getGraph(std::string github_url, httplib::Client& cli);
+
+static std::future<std::string> graphFuture;
+static bool isFetching = false;
 
 static bool DrawUserInputBox(std::string& github_url) {
     std::string github_prefix = "https://github.com/";
@@ -87,6 +97,22 @@ void DrawDirectedEdge(Vector2 start, Vector2 end, float nodeRadius, Color color)
     DrawTriangle(endSurface, p2, p1, color);
 }
 
+std::string getGraph(std::string github_url, httplib::Client& cli) {
+    json data = {
+        {"url", github_url}
+    };
+    
+    auto res = cli.Post("/process", data.dump(), "application/json");
+    printf("Fetching URL: %s\n", github_url.c_str());
+    
+    if (res && res->status == 200) {
+        return res->body; 
+    } else {
+        printf("HTTP Error or bad response!\n");
+        return "{}";
+    }
+}
+
 
 
 int main(void) {
@@ -97,6 +123,14 @@ int main(void) {
     const float maxZoom = 5.0f;
     const float zoomReductionSpeed = 10.0f;
     std::string github_url; 
+    std::string endpoint = std::getenv("ENDPOINT_URL");
+
+    if (endpoint.empty()) {
+        printf("Endpoint environment variable not set");
+        return 1;
+    }
+    // http client setup
+    httplib::Client cli(endpoint, 8000); 
 
     // Raylib setup
     InitWindow(screenWidth, screenHeight, "Nebula");
@@ -158,9 +192,19 @@ int main(void) {
 
         rlImGuiBegin();
 
-        if (DrawUserInputBox(github_url)) {
-            // TRIGGER NETWORK REQUEST HERE
-            printf("Fetching URL: %s\n", github_url.c_str());
+        if (DrawUserInputBox(github_url) && !isFetching) {
+            graphFuture = std::async(std::launch::async, getGraph, github_url, std::ref(cli));
+            isFetching = true;
+        }
+
+        if (isFetching) {
+            ImGui::Text("Fetching repository data... Please wait.");
+            if (graphFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+                std::string result = graphFuture.get(); 
+                isFetching = false;
+
+                // parseJsonGraph(result);
+            }
         }
 
         DoControlMenu(sim);
