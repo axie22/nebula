@@ -17,6 +17,7 @@ void Graph::LoadGraphJSON(Simulation& sim, std::string data) {
     }
 
     if (!json_data.contains("nodes") || !json_data.contains("edges")) {
+        std::cout << "Data: " << data;
         std::cerr << "Invalid JSON format: missing nodes or edges." << std::endl;
         return;
     }

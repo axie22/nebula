@@ -134,8 +134,8 @@ int main(void) {
     std::string endpoint(raw_endpoint);
 
     // http client setup
-    httplib::Client cli(endpoint, 8000); 
-
+    httplib::Client cli("localhost", 8000); 
+    
     // Raylib setup
     InitWindow(screenWidth, screenHeight, "Nebula");
     SetTargetFPS(60);
@@ -154,7 +154,7 @@ int main(void) {
 
     // Load Graph
     Graph loader;
-    loader.LoadGraph(sim, "../graph.json");
+    // loader.LoadGraph(sim, "../graph.json");
     
     while (!WindowShouldClose()) {
         float wheel = GetMouseWheelMove();
