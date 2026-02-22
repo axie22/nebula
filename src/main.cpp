@@ -2,7 +2,8 @@
 #include "Node.h"
 #include "Simulation.h"
 
-#include <httplib.h>
+#include <emscripten.h>
+#include <emscripten/fetch.h>
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
 #include <nlohmann/json.hpp>
@@ -12,10 +13,10 @@
 
 #include <algorithm>
 #include <string>
-#include <future>
-#include <chrono>
 
 using json = nlohmann::json;
+
+static bool isFetching = false;
 
 struct AppContext {
     Camera2D camera;
@@ -36,11 +37,8 @@ static void DoControlMenu(Simulation& sim);
 static void DoNodeInspector(Node& node);
 static void DrawDirectedEdge(Vector2 start, Vector2 end, float nodeRadius, Color color);
 void UpdateDrawFrame(void* arg);
-std::string getGraph(std::string github_url, httplib::Client& cli);
-
-static std::future<std::string> graphFuture;
-static bool isFetching = false;
-httplib::Client cli("localhost", 8000); 
+void downloadSucceeded(emscripten_fetch_t *fetch);
+void downloadFailed(emscripten_fetch_t *fetch);
 
 static bool DrawUserInputBox(std::string& github_url) {
     std::string github_prefix = "https://github.com/";
@@ -113,20 +111,26 @@ void DrawDirectedEdge(Vector2 start, Vector2 end, float nodeRadius, Color color)
     DrawTriangle(endSurface, p2, p1, color);
 }
 
-std::string getGraph(std::string github_url, httplib::Client& cli) {
-    json data = {
-        {"url", github_url}
-    };
+void downloadSucceeded(emscripten_fetch_t *fetch) {
+    printf("Finished downloading %llu bytes from URL %s.\n", fetch->numBytes, fetch->url);
+
+    AppContext* ctx = static_cast<AppContext*>(fetch->userData);
     
-    auto res = cli.Post("/process", data.dump(), "application/json");
-    printf("Fetching URL: %s\n", github_url.c_str());
+    std::string result_str(fetch->data, fetch->numBytes);
     
-    if (res && res->status == 200) {
-        return res->body; 
-    } else {
-        printf("HTTP Error or bad response!\n");
-        return "{}";
-    }
+    ctx->sim.ResetGraph();
+    ctx->graph.LoadGraphJSON(ctx->sim, result_str);
+    
+    isFetching = false;
+
+    emscripten_fetch_close(fetch);
+}
+
+void downloadFailed(emscripten_fetch_t *fetch) {
+    printf("Downloading %s failed, HTTP failure status code: %d.\n", fetch->url, fetch->status);
+    
+    isFetching = false;
+    emscripten_fetch_close(fetch);
 }
 
 void UpdateDrawFrame(void *arg) {
@@ -176,18 +180,32 @@ void UpdateDrawFrame(void *arg) {
     rlImGuiBegin();
 
     if (DrawUserInputBox(github_url) && !isFetching) {
-        graphFuture = std::async(std::launch::async, getGraph, github_url, std::ref(cli));
         isFetching = true;
+        json request_json = {{"url", github_url}};
+        static std::string payload; 
+        payload = request_json.dump();
+
+        // Set up headers
+        static const char* headers[] = {"Content-Type", "application/json", 0};
+
+        emscripten_fetch_attr_t attr;
+        emscripten_fetch_attr_init(&attr);
+        strcpy(attr.requestMethod, "POST");
+        attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+        attr.onsuccess = downloadSucceeded;
+        attr.onerror = downloadFailed;
+        attr.userData = ctx;
+        
+        // Attach payload and headers
+        attr.requestHeaders = headers;
+        attr.requestData = payload.c_str();
+        attr.requestDataSize = payload.length();
+
+        emscripten_fetch(&attr, "http://localhost:8000/process"); 
     }
 
     if (isFetching) {
         ImGui::Text("Fetching repository data... Please wait.");
-        if (graphFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-            std::string result = graphFuture.get(); 
-            isFetching = false;
-            sim.ResetGraph();
-            loader.LoadGraphJSON(sim, result);
-        }
     }
 
     DoControlMenu(sim);
@@ -212,7 +230,12 @@ int main(void) {
     const float maxZoom = 5.0f;
     const float zoomReductionSpeed = 10.0f;
     std::string github_url; 
-    const char* raw_endpoint = std::getenv("ENDPOINT_URL");
+    
+    #ifdef ENDPOINT_URL
+        const char* raw_endpoint = ENDPOINT_URL;
+    #else
+        const char* raw_endpoint = std::getenv("ENDPOINT_URL");
+    #endif
 
     if (raw_endpoint == nullptr) {
         printf("Endpoint environment variable not set\n");
@@ -245,11 +268,15 @@ int main(void) {
     appContext.sim = sim;
     appContext.graph = loader;
     appContext.github_url = github_url;
-    
-    while (!WindowShouldClose()) {
-        UpdateDrawFrame(&appContext);
-    }
 
+    #ifdef __EMSCRIPTEN__
+        emscripten_set_main_loop_arg(UpdateDrawFrame, &appContext, 0, 1);
+    #else
+        while (!WindowShouldClose()) {
+            UpdateDrawFrame(&appContext);
+        }
+    #endif
+    
     rlImGuiShutdown();
     CloseWindow();
     return 0;
